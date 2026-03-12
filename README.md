@@ -19,7 +19,7 @@
 
 ### 1. 从 ClawHub 安装 (推荐)
 ```bash
-clawhub install mycelium-swarm
+clawhub install mycelium
 ```
 
 ### 2. 环境变量配置
