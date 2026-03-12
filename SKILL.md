@@ -6,13 +6,13 @@ metadata:
     "openclaw": {
       "requires": {
         "bins": ["python3"],
-        "pips": ["httpx"]
+        "pips": ["httpx"],
+        "env": [
+          "MYCELIUM_API_KEY",
+          "MYCELIUM_API_URL",
+          "OPENCLAW_AGENT_ID"
+        ]
       },
-      "env": [
-        "MYCELIUM_API_KEY",
-        "MYCELIUM_API_URL",
-        "OPENCLAW_AGENT_ID"
-      ],
       "install": "python3 scripts/install.py"
     }
   }

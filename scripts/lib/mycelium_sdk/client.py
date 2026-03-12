@@ -1,22 +1,36 @@
 from __future__ import annotations
 import os
 import re
-import json
 from typing import Any
 import httpx
 
 def scrub_sensitive_data(obj: Any) -> Any:
-    """Recursively scrub common API key patterns and personal data."""
+    """
+    Recursively scrub common API key patterns, personal data, and system paths.
+    Uses an expanded list of regexes for improved reliability.
+    """
     if isinstance(obj, str):
-        # Scrub typical API keys (sk-..., mk_..., gh_...)
-        obj = re.sub(r'(sk-[a-zA-Z0-9]{20,})', '[REDACTED_KEY]', obj)
+        # 1. API Keys & Tokens
+        # Generic high-entropy strings looking like keys
+        obj = re.sub(r'([a-zA-Z0-9]{32,})', '[REDACTED_HIGH_ENTROPY_STRING]', obj)
+        # Specific formats
+        obj = re.sub(r'(sk-[a-zA-Z0-9]{20,})', '[REDACTED_OPENAI_KEY]', obj)
         obj = re.sub(r'(mk_[a-zA-Z0-9]{20,})', '[REDACTED_MYCELIUM_KEY]', obj)
         obj = re.sub(r'(gh[pousr]_[a-zA-Z0-9]{20,})', '[REDACTED_GITHUB_TOKEN]', obj)
-        # Scrub emails
+        
+        # 2. Personal Information
+        # Emails
         obj = re.sub(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', '[REDACTED_EMAIL]', obj)
-        # Scrub local home paths
+        # IPv4 Addresses
+        obj = re.sub(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b', '[REDACTED_IP]', obj)
+        
+        # 3. System Paths
+        # Local home paths
         user_home = os.path.expanduser("~")
         obj = obj.replace(user_home, "~")
+        # Generic absolute paths
+        obj = re.sub(r'/[a-zA-Z0-9._/-]+', lambda m: m.group(0) if m.group(0).startswith('/usr/bin') or m.group(0).startswith('/tmp') else '[REDACTED_PATH]', obj)
+        
         return obj
     elif isinstance(obj, dict):
         return {k: scrub_sensitive_data(v) for k, v in obj.items()}
@@ -27,6 +41,9 @@ def scrub_sensitive_data(obj: Any) -> Any:
 class MyceliumClient:
     """
     Python SDK for the Mycelium API.
+    
+    WARNING: The publish() method is restricted and requires human review 
+    confirmation to prevent accidental data leakage.
     """
 
     def __init__(
@@ -79,12 +96,17 @@ class MyceliumClient:
         confirmed: bool = False,
     ) -> str:
         """
-        Enforces safety and human-in-the-loop audit.
+        INTERNAL POLICY: This method forces a 'confirmed' check.
+        In an autonomous agent context, the agent SHOULD NOT set confirmed=True 
+        unless it has received an explicit 'Y' from the user in the current session.
         """
         if not confirmed:
-            raise ValueError("Safety Error: publish() requires explicit confirmation. Please review the path and call again with confirmed=True.")
+            raise ValueError(
+                "SAFETY BREACH: publish() called without 'confirmed=True'. "
+                "This method requires human-in-the-loop validation of the data preview."
+            )
 
-        # 1. Implementation of the promised scrubbing
+        # Implementation of the promised scrubbing
         scrubbed_goal = scrub_sensitive_data(goal)
         scrubbed_path = scrub_sensitive_data(path)
         scrubbed_tags = scrub_sensitive_data(tags or [])
