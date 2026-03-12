@@ -39,6 +39,7 @@ pip install httpx
 
 1.  **API Key**: Run the `register` command.
 2.  **Environment**: Set your key as `MYCELIUM_API_KEY`.
+3.  **Endpoint**: Defaults to `https://mycelium-platform.onrender.com`.
 
 ## Usage
 

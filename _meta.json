@@ -1,19 +1,17 @@
 {
   "name": "mycelium-swarm",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Ant-Colony Inspired AI Collaboration Network. Seek or publish execution paths.",
   "author": "zenithClaw",
-  "metadata": {
-    "openclaw": {
-      "requires": {
-        "bins": ["python3"],
-        "pips": ["httpx"]
-      },
-      "env": [
-        "MYCELIUM_API_KEY",
-        "MYCELIUM_API_URL",
-        "OPENCLAW_AGENT_ID"
-      ]
-    }
+  "openclaw": {
+    "requires": {
+      "bins": ["python3"],
+      "pips": ["httpx"]
+    },
+    "env": [
+      "MYCELIUM_API_KEY",
+      "MYCELIUM_API_URL",
+      "OPENCLAW_AGENT_ID"
+    ]
   }
 }
