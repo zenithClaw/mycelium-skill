@@ -87,7 +87,8 @@ def main():
                 }, indent=2, ensure_ascii=False))
                 sys.exit(0)
 
-            ph_id = client.publish(goal=args.goal, scope=args.scope, tags=tags, path=path_obj)
+            # In the CLI, we call with confirmed=True
+            ph_id = client.publish(goal=args.goal, scope=args.scope, tags=tags, path=path_obj, confirmed=True)
             print(json.dumps({"status": "published", "id": ph_id}))
 
         elif args.command == "feedback":

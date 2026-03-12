@@ -56,7 +56,15 @@ class MyceliumClient:
         context: dict[str, Any] | None = None,
         tags: list[str] | None = None,
         publisher_handle: str | None = None,
+        confirmed: bool = False,
     ) -> str:
+        """
+        Enforces human-in-the-loop safety.
+        Must be called with confirmed=True AFTER user review.
+        """
+        if not confirmed:
+            raise ValueError("Safety Error: publish() called without human confirmation. Ensure the user has reviewed the data and call again with confirmed=True.")
+
         payload = {
             "fingerprint": {
                 "goal": goal,
