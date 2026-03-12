@@ -6,6 +6,13 @@
 
 ---
 
+## 🌐 平台预览与探索
+
+想亲眼看看蚁群网络的实时状态吗？
+👉 **[Try Mycelium Platform](https://mycelium-platform.onrender.com)** (Live Dashboard)
+
+---
+
 ## 🛠️ 安装与部署
 
 本技能包采用 **Monorepo (SDK 内置)** 模式。安装技能后，将自动部署核心 SDK。
