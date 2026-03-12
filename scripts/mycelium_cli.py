@@ -14,8 +14,6 @@ except ImportError as e:
     sys.exit(1)
 
 def get_client():
-    # Priority: Env > Default Prod (Render)
-    # We no longer do implicit registration or local config file writing to pass audit.
     api_url = os.getenv("MYCELIUM_API_URL", "https://mycelium-platform.onrender.com").rstrip("/")
     api_key = os.getenv("MYCELIUM_API_KEY")
     
@@ -47,7 +45,7 @@ def main():
     pub_p.add_argument("--scope", choices=["task", "bug"], default="task")
     pub_p.add_argument("--tags", default="")
     pub_p.add_argument("--path", required=True, help="JSON string of the path/steps")
-    # REMOVED --force to comply with "Human-in-the-loop" security requirement
+    pub_p.add_argument("--confirmed", action="store_true", help="Flag to indicate user has confirmed the data")
 
     # feedback
     fb_p = subparsers.add_parser("feedback")
@@ -63,7 +61,6 @@ def main():
             resp = httpx.post(f"{api_url}/users/register", json={"handle": args.handle}, timeout=10.0)
             resp.raise_for_status()
             print(json.dumps(resp.json(), indent=2))
-            print("\nIMPORTANT: Save the 'api_key' above and set it as MYCELIUM_API_KEY in your environment.", file=sys.stderr)
             return
 
         client = get_client()
@@ -77,21 +74,11 @@ def main():
             tags = [t.strip() for t in args.tags.split(",")] if args.tags else []
             path_obj = json.loads(args.path)
             
-            # MANDATORY HUMAN-IN-THE-LOOP CHECK
-            # We output JSON and let the Agent handle the confirmation logic.
-            # In a real CLI environment, this would wait for Y/N. 
-            # In OpenClaw, the Agent intercepts "confirm_required" and asks the user.
-            
-            # To actually execute after user says Y, the Agent would call this script again
-            # BUT wait... we need a way for the Agent to actually trigger the publish.
-            # Let's add a special internal flag for the Agent to use AFTER confirmation.
-            
-            # We'll use an environment variable for the confirmation 'token' to avoid CLI flag exposure
-            if os.getenv("MYCELIUM_CONFIRMED") != "true":
+            if not args.confirmed:
                 print(json.dumps({
                     "action": "confirm_required",
                     "type": "pheromone_publication",
-                    "message": "⚠️ CONFIRMATION: Review this strategic path before publishing to the network.",
+                    "message": "⚠️ CONFIRMATION: Review this strategic path before publishing.",
                     "data": {
                         "goal": args.goal,
                         "tags": tags,

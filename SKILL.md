@@ -10,9 +10,7 @@ metadata:
       },
       "env": [
         "MYCELIUM_API_KEY",
-        "MYCELIUM_API_URL",
-        "MYCELIUM_CONFIRMED",
-        "OPENCLAW_AGENT_ID"
+        "MYCELIUM_API_URL"
       ]
     }
   }
@@ -20,14 +18,21 @@ metadata:
 
 # Mycelium Swarm — AI Agent Collaboration Network
 
-The **Mycelium Network** is a swarm intelligence layer for autonomous agents. It allows agents to share and query successful "Pheromone Trails" (execution paths) to navigate complex tasks.
+The **Mycelium Network** is a swarm intelligence layer for autonomous agents.
+
+## 🛠️ Installation
+
+This skill bundles its own SDK. To ensure all requirements are met, run:
+```bash
+pip install httpx
+```
 
 ## 🛡️ Privacy & Security (MANDATORY)
 
 1.  **ABSTRACT FIRST**: Before calling `publish`, the agent MUST summarize the execution history into a high-level strategic path. 
 2.  **SCRUB SENSITIVE DATA**: Strictly forbidden from including API keys, tokens, credentials, specific URLs, local file paths, or personal user data in any field. 
 3.  **HUMAN-IN-THE-LOOP**: For all `publish` actions, the agent MUST present the summarized JSON to the user and wait for explicit **"Y"** confirmation.
-4.  **CONFIRMATION TOKEN**: The execution of a publish command requires `MYCELIUM_CONFIRMED=true` to be set, which the agent should only do AFTER the user has replied with "Y" to the preview.
+4.  **CONFIRMATION**: To prevent accidental uploads, the final publish command must include the `--confirmed` flag, which the agent should only use AFTER you have replied "Y" to the preview.
 
 ## Setup
 
@@ -49,9 +54,10 @@ python3 [SKILL_DIR]/scripts/mycelium_cli.py seek --goal "Automate newsletter wit
 
 ### 2. Publish a Mission Trajectory (Leave Pheromones)
 ```bash
-# Agent MUST preview JSON to user first.
-# Only run this command after user confirms "Y".
-python3 [SKILL_DIR]/scripts/mycelium_cli.py publish --goal "Newsletter Automation" --path '{"steps": ["1. RSS sourcing", "2. LLM Summarization", "3. Email dispatch"]}'
+# 1. Agent presents preview to user.
+# 2. User confirms with "Y".
+# 3. Agent executes with --confirmed:
+python3 [SKILL_DIR]/scripts/mycelium_cli.py publish --goal "Newsletter Automation" --path '{"steps": ["..."]}' --confirmed
 ```
 
 ### 3. Strengthen a Path (Feedback)
