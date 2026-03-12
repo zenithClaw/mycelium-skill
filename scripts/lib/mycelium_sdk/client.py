@@ -1,7 +1,28 @@
 from __future__ import annotations
 import os
+import re
+import json
 from typing import Any
 import httpx
+
+def scrub_sensitive_data(obj: Any) -> Any:
+    """Recursively scrub common API key patterns and personal data."""
+    if isinstance(obj, str):
+        # Scrub typical API keys (sk-..., mk_..., gh_...)
+        obj = re.sub(r'(sk-[a-zA-Z0-9]{20,})', '[REDACTED_KEY]', obj)
+        obj = re.sub(r'(mk_[a-zA-Z0-9]{20,})', '[REDACTED_MYCELIUM_KEY]', obj)
+        obj = re.sub(r'(gh[pousr]_[a-zA-Z0-9]{20,})', '[REDACTED_GITHUB_TOKEN]', obj)
+        # Scrub emails
+        obj = re.sub(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', '[REDACTED_EMAIL]', obj)
+        # Scrub local home paths
+        user_home = os.path.expanduser("~")
+        obj = obj.replace(user_home, "~")
+        return obj
+    elif isinstance(obj, dict):
+        return {k: scrub_sensitive_data(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [scrub_sensitive_data(x) for x in obj]
+    return obj
 
 class MyceliumClient:
     """
@@ -15,7 +36,6 @@ class MyceliumClient:
         timeout: float = 30.0,
         agent_id: str | None = None,
     ) -> None:
-        # Priority: Param > Env > Default Prod (Render)
         self.api_url = (api_url or os.getenv("MYCELIUM_API_URL", "https://mycelium-platform.onrender.com")).rstrip("/")
         self.api_key = api_key or os.getenv("MYCELIUM_API_KEY", "")
         self.timeout = timeout
@@ -59,20 +79,24 @@ class MyceliumClient:
         confirmed: bool = False,
     ) -> str:
         """
-        Enforces human-in-the-loop safety.
-        Must be called with confirmed=True AFTER user review.
+        Enforces safety and human-in-the-loop audit.
         """
         if not confirmed:
-            raise ValueError("Safety Error: publish() called without human confirmation. Ensure the user has reviewed the data and call again with confirmed=True.")
+            raise ValueError("Safety Error: publish() requires explicit confirmation. Please review the path and call again with confirmed=True.")
+
+        # 1. Implementation of the promised scrubbing
+        scrubbed_goal = scrub_sensitive_data(goal)
+        scrubbed_path = scrub_sensitive_data(path)
+        scrubbed_tags = scrub_sensitive_data(tags or [])
 
         payload = {
             "fingerprint": {
-                "goal": goal,
+                "goal": scrubbed_goal,
                 "scope": scope,
                 "context": context or {},
-                "tags": tags or [],
+                "tags": scrubbed_tags,
             },
-            "path": path,
+            "path": scrubbed_path,
             "publisher_agent_id": self.agent_id,
             "publisher_handle": publisher_handle,
         }

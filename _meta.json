@@ -1,6 +1,6 @@
 {
   "name": "mycelium-swarm",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Ant-Colony Inspired AI Collaboration Network. Seek or publish execution paths.",
   "author": "zenithClaw",
   "openclaw": {
